@@ -1,6 +1,11 @@
 package main
 
 import (
+	"log"
+	"log/slog"
+	"os"
+	"path"
+
 	"github.com/jimmyl0l3c/django-ls/lsp"
 	"github.com/tliron/commonlog"
 	"github.com/tliron/glsp"
@@ -12,22 +17,29 @@ import (
 	_ "github.com/tliron/commonlog/simple"
 )
 
-const lsName = "django-ls"
-
-var (
-	version string = "0.0.1"
-	handler protocol.Handler
-)
+var handler protocol.Handler
 
 func main() {
+	logPath := path.Join(os.Getenv("HOME"), ".local", "state", "django-ls.log")
+	logf, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	if err != nil {
+		log.Fatal(err)
+	}
+	logger := slog.New(slog.NewJSONHandler(logf, &slog.HandlerOptions{Level: slog.LevelDebug}))
+	slog.SetDefault(logger)
+
 	// This increases logging verbosity (optional)
 	commonlog.Configure(1, nil)
 
 	handler = protocol.Handler{
-		Initialize:             initialize,
-		Initialized:            initialized,
-		Shutdown:               shutdown,
-		SetTrace:               setTrace,
+		Initialize:  initialize,
+		Initialized: initialized,
+		Shutdown:    shutdown,
+		SetTrace:    setTrace,
+
+		TextDocumentDidOpen:    lsp.TextDocumentDidOpen,
+		TextDocumentDidChange:  lsp.TextDocumentDidChange,
+		TextDocumentDidClose:   lsp.TextDocumentDidClose,
 		TextDocumentCompletion: lsp.TextDocumentCompletion,
 	}
 
@@ -38,6 +50,8 @@ func main() {
 
 func initialize(context *glsp.Context, params *protocol.InitializeParams) (any, error) {
 	capabilities := handler.CreateServerCapabilities()
+
+	go lsp.Init(params)
 
 	return protocol.InitializeResult{
 		Capabilities: capabilities,
