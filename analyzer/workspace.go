@@ -8,7 +8,10 @@ import (
 
 	"github.com/jimmyl0l3c/django-ls/parser"
 	"github.com/jimmyl0l3c/django-ls/safemap"
+	"github.com/jimmyl0l3c/django-ls/set"
 )
+
+var functionNames = set.New([]string{"values", "filter", "prefetch_related"})
 
 type DjangoWorkspace struct {
 	RootPath       string
@@ -39,12 +42,15 @@ func (dw *DjangoWorkspace) GetModel(name string) *DjangoModel {
 }
 
 func (dw *DjangoWorkspace) GetLookups(call *parser.MethodCall) []FieldLookup {
+	// TODO: improve the filtering
+	if !functionNames.Contains(call.Method) {
+		return nil
+	}
+
 	m := dw.GetModel(call.Class)
 	if m == nil {
 		return nil
 	}
-
-	// TODO: check method
 
 	return m.GetLookups()
 }

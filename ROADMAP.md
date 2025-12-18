@@ -6,13 +6,13 @@
 - [x] Detect when completions are for `values` or `filter` method
 - [x] Detect a model of the queryset
 - [x] Return completions for the models field lookups in `values`/`filter` methods
+- [x] Only show completions for specific methods (like `values`/`filter`)
 - [ ] Polish the logic a bit (thread synchronization)
-- [ ] Only show completions for specific methods (like `values`/`filter`)
 
 # 0.2.0
 
 - [ ] Change the completion value based on method (e.g. `values` expects strings, `filter` expects kwargs)
-- [ ] Write tests for parser
+- [ ] Write tests for parser and safemap
 - [ ] LS should have debug argument
 - [ ] Show additional field lookups (e.g. `in`, `isnull`, ...)
 - [ ] Improve completion parser (queryset/model detection)
