@@ -1,6 +1,7 @@
 package analyzer
 
 import (
+	"bytes"
 	"encoding/json"
 	"log/slog"
 	"os/exec"
@@ -48,19 +49,16 @@ func (dw *DjangoWorkspace) GetLookups(call *parser.MethodCall) []FieldLookup {
 }
 
 func (gw *DjangoWorkspace) runAnalyzer() error {
-	script, err := getAnalyzeScript()
-	if err != nil {
-		slog.Error("Could not setup anaylzer script.", "error", err)
-		return err
-	}
-
 	py, err := getPythonBin()
 	if err != nil {
 		slog.Error("Could not get python bin.", "error", err)
 		return err
 	}
 
-	cmd := exec.Command(py, script, gw.RootPath, "-s", gw.SettingsModule)
+	cmd := exec.Command(py, "-", gw.RootPath, "-s", gw.SettingsModule)
+
+	cmd.Stdin = bytes.NewBuffer(modelAnalyzerPy)
+
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		slog.Error("Could not pipe stdout.", "error", err)
@@ -68,7 +66,7 @@ func (gw *DjangoWorkspace) runAnalyzer() error {
 	}
 	defer stdout.Close()
 
-	slog.Debug("Starting analyzer.", "interpreter", py, "script", script, "root", gw.RootPath, "settings", gw.SettingsModule)
+	slog.Debug("Starting analyzer.", "interpreter", py, "root", gw.RootPath, "settings", gw.SettingsModule)
 
 	if err := cmd.Start(); err != nil {
 		slog.Error("Could not start cmd.", "error", err)

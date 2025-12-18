@@ -52,13 +52,10 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def main():
-    args = parse_args()
-    if not args.workspace_path.is_dir():
-        raise argparse.ArgumentError(argument=None, message="Specified workspace is not a directory.")
-
-    sys.path.append(str(args.workspace_path))
-    os.environ.setdefault(ENVIRONMENT_VARIABLE, args.settings)
+def run_analyzer(workspace_path: Path, settings_module: str | None = None, output: Path | None = None):
+    sys.path.append(str(workspace_path))
+    if settings_module:
+        os.environ.setdefault(ENVIRONMENT_VARIABLE, settings_module)
 
     settings = LazySettings()
     apps.populate(settings.INSTALLED_APPS)
@@ -82,8 +79,8 @@ def main():
         for model_class in models.values()
     ]
 
-    if args.output:
-        with args.output.open("w") as f:
+    if output:
+        with output.open("w") as f:
             json.dump(model_data, f, cls=DCJSONEncoder)
         return
 
@@ -92,4 +89,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    args = parse_args()
+    run_analyzer(args.workspace_path, args.settings, args.output)
