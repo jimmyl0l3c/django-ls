@@ -7,20 +7,21 @@ import (
 	"os/exec"
 
 	"github.com/jimmyl0l3c/django-ls/parser"
+	"github.com/jimmyl0l3c/django-ls/safemap"
 )
 
 type DjangoWorkspace struct {
 	RootPath       string
 	SettingsModule string
 
-	models map[string]*DjangoModel
+	models *safemap.SafeMap[*DjangoModel]
 }
 
 func newWorkspace(root string, settings string) *DjangoWorkspace {
 	return &DjangoWorkspace{
 		RootPath:       root,
 		SettingsModule: settings,
-		models:         make(map[string]*DjangoModel),
+		models:         safemap.New[*DjangoModel](),
 	}
 }
 
@@ -29,7 +30,7 @@ func (dw *DjangoWorkspace) GetModel(name string) *DjangoModel {
 		return nil
 	}
 
-	model, ok := dw.models[name]
+	model, ok := dw.models.Load(name)
 	if !ok {
 		return nil
 	}
@@ -85,11 +86,11 @@ func (gw *DjangoWorkspace) runAnalyzer() error {
 	}
 
 	for _, v := range jsonData {
-		gw.models[v.Name] = &v
+		gw.models.Store(v.Name, &v)
 		go v.syncLookups()
 	}
 
-	slog.Debug("Models loaded.", "models", gw.models)
+	slog.Debug("Models loaded.")
 
 	return nil
 }

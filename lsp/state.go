@@ -2,13 +2,13 @@ package lsp
 
 import (
 	"log/slog"
-	"sync"
 
 	"github.com/jimmyl0l3c/django-ls/analyzer"
+	"github.com/jimmyl0l3c/django-ls/safemap"
 	protocol "github.com/tliron/glsp/protocol_3_16"
 )
 
-var documentStates sync.Map
+var documentStates = safemap.New[*DocumentState]()
 var djangoWorkspace *analyzer.DjangoWorkspace
 
 type DocumentState struct {
@@ -17,12 +17,10 @@ type DocumentState struct {
 }
 
 func getDocument(key string) (*DocumentState, bool) {
-	v, ok := documentStates.Load(key)
+	doc, ok := documentStates.Load(key)
 	if !ok {
 		return nil, false
 	}
-
-	doc, ok := v.(*DocumentState)
 
 	return doc, ok
 }

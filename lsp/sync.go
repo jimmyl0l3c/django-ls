@@ -33,8 +33,6 @@ func TextDocumentDidChange(context *glsp.Context, params *protocol.DidChangeText
 		return nil
 	}
 
-	// TODO: use mutex for sync? replace sync.Map?
-
 	for _, change := range params.ContentChanges {
 		if e, ok := change.(protocol.TextDocumentContentChangeEvent); ok {
 			start, end := e.Range.IndexesIn(doc.Content)
